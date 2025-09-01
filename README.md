@@ -64,5 +64,5 @@ Send an arbitrary command and read the result.
 
 Publish a trade event information.
 ```
-./kdb_sandbox -m trade -h 127.0.0.1 -p 1234 -c "3+4.5"
+./kdb_sandbox -m trade -h 127.0.0.1 -p 1234 -E binance -T 17998209812 -P 108234.67 -Q 0.01 -S buy -I 99999999
 ```
