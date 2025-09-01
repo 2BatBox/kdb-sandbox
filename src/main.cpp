@@ -151,18 +151,30 @@ private:
 		return k(_kdb_hnd, const_cast<char*>(command), (K)0);
 	}
 
+	// --------------------------------------------------------------
+	//	c       | t f a
+	//	--------| -----
+	//	exchange| s
+	//	exchTS  | p
+	//	price   | f
+	//	size    | f
+	//	side    | s
+	//	tradeId | C
+	// --------------------------------------------------------------
 	K kdb_send_trade_data() {
-		K args = knk(2,
-			ks(const_cast<char*>("updData")),
-			knk(6,
-				ks(const_cast<char*>(_cli.exchange.value().data())),
-				ktj(-KP, _cli.timestamp.value()),
-				kf(_cli.price.value()),
-				kf(_cli.quantity.value()),
-				ks(const_cast<char*>(_cli.side.value().to_cstr())),
-				kpn(const_cast<char*>(_cli.id.value().data()), _cli.id.value().size())
-			)
+		K row_data = knk(6,
+			ks(const_cast<char*>(_cli.exchange.value().data())),                     // exchange (symbol)
+			ktj(-KP, _cli.timestamp.value()),                                        // exchTS (timestamp)
+			kf(_cli.price.value()),                                                  // price (float)
+			kf(_cli.quantity.value()),                                               // size (float)
+			ks(const_cast<char*>(_cli.side.value().to_cstr())),                      // side (symbol)
+			kpn(const_cast<char*>(_cli.id.value().data()), _cli.id.value().size())   // tradeId (string)
 		);
+		assert(row_data != nullptr);
+
+		K args = knk(2, ks(const_cast<char*>("updData")), row_data);
+		assert(args != nullptr);
+
 		return k(_kdb_hnd, const_cast<char*>(".u.upd"), args, (K)0);
 	}
 
