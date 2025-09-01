@@ -139,7 +139,7 @@ private:
 			case XD: printf("result (dict): [dictionary]\n"); break;
 			case 0: printf("result (mixed list): [list with %lld items]\n", result->n); break;
 			default:
-				printf("Unsupported type: %d\n", result->t);
+				printf("Unsupported type: %d message='%s'\n", result->t, result->s);
 				return false;
 		}
 		return true;
