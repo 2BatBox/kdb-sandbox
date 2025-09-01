@@ -138,8 +138,9 @@ private:
 			case XT: printf("result (table): [table with %lld rows]\n", result->n); break;
 			case XD: printf("result (dict): [dictionary]\n"); break;
 			case 0: printf("result (mixed list): [list with %lld items]\n", result->n); break;
+			case -128: printf("Error message='%s'\n", result->s); break;
 			default:
-				printf("Unsupported type: %d message='%s'\n", result->t, result->s);
+				printf("Unsupported type: %d\n", result->t);
 				return false;
 		}
 		return true;
