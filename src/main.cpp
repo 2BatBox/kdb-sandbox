@@ -161,8 +161,7 @@ private:
 				kf(_cli.quantity.value()),
 				ks(const_cast<char*>(_cli.side.value().to_cstr())),
 				kpn(const_cast<char*>(_cli.id.value().data()), _cli.id.value().size())
-				),
-			(K)nullptr
+			)
 		);
 		return k(_kdb_hnd, const_cast<char*>(".u.upd"), args, (K)0);
 	}
