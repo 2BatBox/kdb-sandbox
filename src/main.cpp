@@ -147,13 +147,13 @@ private:
 
 	K kdb_send_command() {
 		auto command = _cli.command.value().data();
-		return k(_kdb_hnd, const_cast<char*>(command), (K) 0);
+		return k(_kdb_hnd, const_cast<char*>(command), (K)0);
 	}
 
 	K kdb_send_trade_data() {
-		K args = knk(3,
+		K args = knk(2,
 			ks(const_cast<char*>("updData")),
-				knk(6,
+			knk(6,
 				ks(const_cast<char*>(_cli.exchange.value().data())),
 				ktj(-KP, _cli.timestamp.value()),
 				kf(_cli.price.value()),
@@ -163,7 +163,6 @@ private:
 				),
 			(K)nullptr
 		);
-
 		return k(_kdb_hnd, const_cast<char*>(".u.upd"), args, (K)0);
 	}
 

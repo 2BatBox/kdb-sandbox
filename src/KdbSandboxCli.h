@@ -49,7 +49,7 @@ struct KdbSandboxCli {
 	Option<std::string> host = Option<std::string>('h', "KDB host IP.", ++pr);
 	Option<int> port = Option<int>('p', "KDB port.", ++pr);
 	Option<std::string> user = Option<std::string>('u', "KDB user name.", ++pr);
-	Option<std::string> password = Option<std::string>('U', "KDB user password.", ++pr);
+	Option<std::string> password = Option<std::string>('s', "KDB user password.", ++pr);
 	Option<std::string> command = Option<std::string>('c', "User defined KDB command.", ++pr);
 
 	Option<unsigned> rounds = Option<unsigned>('r', "How many", ++pr);
@@ -58,7 +58,7 @@ struct KdbSandboxCli {
 	Option<long> timestamp = Option<long>('T', "Timestamp in nanoseconds.", ++pr);
 	Option<double> price = Option<double>('P', "Price.", ++pr);
 	Option<double> quantity = Option<double>('Q', "Quantity.", ++pr);
-	Option<Side> side = Option<Side>('s', Side::description(), ++pr);
+	Option<Side> side = Option<Side>('S', Side::description(), ++pr);
 	Option<std::string> id = Option<std::string>('I', "ID.", ++pr);
 
 //	OptionFlag stay_connected = OptionFlag('j', "Show kanji before.", ++pr);
@@ -68,7 +68,7 @@ struct KdbSandboxCli {
 	KdbSandboxCli() {
 		action[EnumMethod::TEST].desc("Test connection.").mand(host, port).opt(user, password);
 		action[EnumMethod::SEND_CMD].desc("Send user command.").mand(host, port, command).opt(user, password);
-		action[EnumMethod::SEND_TRADE].desc("Send order data.").mand(host, port, command, exchange, timestamp, price, quantity, side, id).opt(user, password);
+		action[EnumMethod::SEND_TRADE].desc("Send order data.").mand(host, port, exchange, timestamp, price, quantity, side, id).opt(user, password);
 		action.finalize();
 	}
 

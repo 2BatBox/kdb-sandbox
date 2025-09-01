@@ -41,12 +41,28 @@ make
 ```
 
 #How to use the sandbox?
+
+Test connection without authentication.
 ```
+./kdb_sandbox -m test -h 127.0.0.1 -p 1234 -u user
 ```
 
-#How to update the raw history data?
+Test connection with a username.
 ```
-cd scripts
-./binance_spot_update_raw.sh
-./binance_spot_update_replay.sh
+./kdb_sandbox -m test -h 127.0.0.1 -p 1234 -u user
+```
+
+Test connection with a username and password.
+```
+./kdb_sandbox -m test -h 127.0.0.1 -p 1234 -u user -U pass
+```
+
+Send an arbitrary command and read the result.
+```
+./kdb_sandbox -m cmd -h 127.0.0.1 -p 1234 -c "3+4.5"
+```
+
+Publish a trade event information.
+```
+./kdb_sandbox -m trade -h 127.0.0.1 -p 1234 -c "3+4.5"
 ```
