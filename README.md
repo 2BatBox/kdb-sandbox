@@ -32,7 +32,7 @@ export QLIC=$QHOME
 
 #How to build the sandbox?
 ```
-git clone ...
+git clone https://github.com/2BatBox/kdb-sandbox
 cd kdb-sandbox
 mkdir build && cd build
 cmake ../
