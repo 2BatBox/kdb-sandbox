@@ -134,6 +134,10 @@ struct Kdb {
 		return create_timestamp((usec - 946684800000000LL) * 1000LL);
 	}
 
+	static K create_timespan_from_utc_usec(const int64_t usec) {
+		return create_timespan((usec - 946684800000000LL) * 1000LL);
+	}
+
 	static K create_empty_list() { return knk(0); }
 	static K create_null() { return (K)nullptr; }
 
