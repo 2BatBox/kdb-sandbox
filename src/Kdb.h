@@ -130,6 +130,35 @@ struct Kdb {
 		return result;
 	}
 
+	static K create_single_timestamp(long value) {
+		K result = ktn(KP, 1);
+		kJ(result)[0] = value;
+		return result;
+	}
+
+	static K create_single_symbol(const char* value) {
+		K result = ktn(KS, 1);
+		kS(result)[0] = ss(const_cast<char*>(value));
+		return result;
+	}
+
+	static K create_single_long(long value) {
+		K result = ktn(KJ, 1);
+		kJ(result)[0] = value;
+		return result;
+	}
+
+	static K create_single_float(double value) {
+		K result = ktn(KF, 1);
+		kF(result)[0] = value;
+		return result;
+	}
+
+
+	static K create_single_timestamp_from_utc_usec(const int64_t usec) {
+		return create_single_timestamp((usec - 946684800000000LL) * 1000LL);
+	}
+
 	static K create_timestamp_from_utc_usec(const int64_t usec) {
 		return create_timestamp((usec - 946684800000000LL) * 1000LL);
 	}
