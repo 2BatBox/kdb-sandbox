@@ -1,5 +1,7 @@
 #include "KdbSandboxCli.h"
-#include <k.h>
+#include "Kdb.h"
+
+#include <chrono>
 
 class KdbSandboxApp {
 
@@ -23,7 +25,8 @@ public:
 		switch (_cli.action.action().value) {
 			case KdbSandboxCli::TEST: break;
 			case KdbSandboxCli::SEND_CMD: result = kdb_send_command(); break;
-			case KdbSandboxCli::SEND_TRADE: result = kdb_send_trade_data(); break;
+			case KdbSandboxCli::SEND_MTRADE: result = kdb_send_trade_data(); break;
+			case KdbSandboxCli::SEND_QUOTE: result = kdb_send_quote(); break;
 
 			default:
 				fprintf(stderr, "Method %s is not supported.\n", _cli.action.action().to_cstr());
@@ -43,6 +46,11 @@ public:
 	}
 
 private:
+
+	static int64_t utc_usec_now() {
+		const auto ts_now = std::chrono::system_clock::now().time_since_epoch();
+		return std::chrono::duration_cast<std::chrono::microseconds>(ts_now).count();
+	}
 
 	int kdb_connect() {
 		const auto host = _cli.host.value();
@@ -100,6 +108,7 @@ private:
 	}
 
 	static bool kdb_print_result(K result) {
+		printf("Result type : %s, ", Kdb::result_name(result->t));
 		switch (result->t) {
 			case -KB: printf("result (boolean): %s\n", result->g ? "true" : "false"); break;
 			case -KG: printf("result (byte): %u\n", result->g); break;
@@ -136,7 +145,6 @@ private:
 
 				break; // 11
 			case XT: printf("result (table): [table with %lld rows]\n", result->n); break;
-			case XD: printf("result (dict): [dictionary]\n"); break;
 			case 0: printf("result (mixed list): [list with %lld items]\n", result->n); break;
 			case -128: printf("Error message='%s'\n", result->s); break;
 			default:
@@ -148,34 +156,27 @@ private:
 
 	K kdb_send_command() {
 		auto command = _cli.command.value().data();
-		return k(_kdb_hnd, const_cast<char*>(command), (K)0);
+		return k(_kdb_hnd, const_cast<char*>(command), (K)nullptr);
 	}
 
-	// --------------------------------------------------------------
-	//	c       | t f a
-	//	--------| -----
-	//	exchange| s
-	//	exchTS  | p
-	//	price   | f
-	//	size    | f
-	//	side    | s
-	//	tradeId | C
-	// --------------------------------------------------------------
 	K kdb_send_trade_data() {
-		K row_data = knk(6,
-			ks(const_cast<char*>(_cli.exchange.value().data())),                     // exchange (symbol)
-			ktj(-KP, _cli.timestamp.value()),                                        // exchTS (timestamp)
-			kf(_cli.price.value()),                                                  // price (float)
-			kf(_cli.quantity.value()),                                               // size (float)
-			ks(const_cast<char*>(_cli.side.value().to_cstr())),                      // side (symbol)
-			kpn(const_cast<char*>(_cli.id.value().data()), _cli.id.value().size())   // tradeId (string)
+		K row_data = Kdb::create_list(1, Kdb::create_symbol("hello3"));
+		return Kdb::execute_sync(_kdb_hnd, "insert", Kdb::create_symbol("trade"), row_data);
+	}
+
+	K kdb_send_quote() {
+		K row = Kdb::create_list(8,
+             Kdb::create_timestamp_from_utc_usec(utc_usec_now()), //  time                 | p
+             Kdb::create_symbol(_cli.symbol.value().c_str()),     //  sym                  | s
+             Kdb::create_timestamp_from_utc_usec(utc_usec_now()), //  tardisTime           | p
+             Kdb::create_long(_cli.id),                           //  orderBookSnapshotId  | j
+             Kdb::create_float(_cli.price),                       //  bid                  | f
+             Kdb::create_float(_cli.quantity),                    //  bsize                | f
+             Kdb::create_float(_cli.price),                       //  ask                  | f
+             Kdb::create_float(_cli.quantity)                     //  asize                | f
 		);
-		assert(row_data != nullptr);
-
-		K args = knk(2, ks(const_cast<char*>("updData")), row_data);
-		assert(args != nullptr);
-
-		return k(_kdb_hnd, const_cast<char*>(".u.upd"), args, (K)0);
+		auto cmd = _cli.use_insert.presented() ? "insert" : ".u.upd";
+		return Kdb::execute_sync(_kdb_hnd, cmd, Kdb::create_symbol("quote"), row);
 	}
 
 };
