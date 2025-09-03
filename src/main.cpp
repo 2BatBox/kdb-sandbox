@@ -36,7 +36,7 @@ public:
 		if (result == nullptr) {
 			printf("No result was given!\n");
 		} else {
-			kdb_print_result(result);
+			Kdb::dump(stdout, result);
 			r0(result);
 		}
 
@@ -63,20 +63,19 @@ private:
 			const auto user = _cli.user.value();
 			if(_cli.password.presented()) {
 				const auto password = _cli.password.value();
-				std::string cred = user + ':' + password;
-				_kdb_hnd = khpu(const_cast<char*>(host.data()), port, const_cast<char*>(cred.data()));
+				_kdb_hnd = Kdb::connect(host.c_str(), port, user.c_str(), password.c_str());
 			} else {
-				_kdb_hnd = khpu(const_cast<char*>(host.data()), port, const_cast<char*>(user.data()));
+				_kdb_hnd = Kdb::connect(host.c_str(), port, user.c_str());
 			}
 		} else {
-			_kdb_hnd = khp(const_cast<char*>(host.data()), port);
+			_kdb_hnd = Kdb::connect(host.c_str(), port);
 		}
 
-		const bool result = kdb_handler_check(_kdb_hnd);
+		const bool result = Kdb::handler_check(_kdb_hnd);
 		if(result) {
 			printf("connected. _kdb_hnd=%d\n", _kdb_hnd);
 		} else {
-			printf(" connection failed with code=%d (%s)\n", _kdb_hnd, kdb_handler_error_name(_kdb_hnd));
+			printf(" connection failed with code=%d (%s)\n", _kdb_hnd, Kdb::handler_error_name(_kdb_hnd));
 		}
 
 		return result;
@@ -90,78 +89,14 @@ private:
 		}
 	}
 
-	static const char* kdb_handler_error_name(const int hnd) {
-		const char* result = "success";
-		if(hnd <= 0) {
-			switch (hnd) {
-				case 0: return "authentication_failed";
-				case -1: return "network error";
-				case -2: return "timeout";
-				default: return "unknown error";
-			}
-		}
-		return result;
-	}
-
-	static bool kdb_handler_check(const int hnd) {
-		return hnd > 0;
-	}
-
-	static bool kdb_print_result(K result) {
-		printf("Result type : %s, ", Kdb::result_name(result->t));
-		switch (result->t) {
-			case -KB: printf("result (boolean): %s\n", result->g ? "true" : "false"); break;
-			case -KG: printf("result (byte): %u\n", result->g); break;
-			case -KH: printf("result (short): %hd\n", result->h); break;
-			case -KI: printf("result (int): %d\n", result->i); break;
-			case -KJ: printf("result (long): %lld\n", result->j); break;
-			case -KE: printf("result (real): %g\n", result->e); break;
-			case -KF: printf("result (float): %f\n", result->f); break;
-			case -KC: printf("result (char): '%c'\n", result->u); break;
-			case -KS: printf("result (symbol): %s\n", result->s); break;
-			case -KP: printf("result (timestamp): %lld\n", result->j); break;
-			case -KM: printf("result (month): %d\n", result->i); break;
-			case -KD: printf("result (date): %d\n", result->i); break;
-			case -KZ: printf("result (datetime): %f\n", result->f); break;
-			case -KN: printf("result (timespan): %lld\n", result->j); break;
-			case -KU: printf("result (minute): %d\n", result->i); break;
-			case -KV: printf("result (second): %d\n", result->i); break;
-			case -KT: printf("result (time): %d\n", result->i); break;
-
-			case KG: printf("result (byte vector): [%lld bytes]\n", result->n); break;  // 4
-			case KH: printf("result (short vector): [%lld shorts]\n", result->n); break; // 5
-			case KI: printf("result (int vector): [%lld ints]\n", result->n); break;     // 6
-			case KJ: printf("result (long vector): [%lld longs]\n", result->n); break;   // 7
-			case KE: printf("result (real vector): [%lld reals]\n", result->n); break;   // 8
-			case KF: printf("result (float vector): [%lld floats]\n", result->n); break; // 9
-			case KC: printf("result (char vector/string): \"%.*s\"\n", (int)result->n, result->G0); break; // 10
-			case KS:
-				printf("result (symbol vector): [%lld symbols] ", result->n);
-				printf("[");
-				for(int i = 0; i < result->n; i++) {
-					printf("`%s%s", kS(result)[i], i < result->n-1 ? " " : "");
-				}
-				printf("]\n");
-
-				break; // 11
-			case XT: printf("result (table): [table with %lld rows]\n", result->n); break;
-			case 0: printf("result (mixed list): [list with %lld items]\n", result->n); break;
-			case -128: printf("Error message='%s'\n", result->s); break;
-			default:
-				printf("Unsupported type: %d\n", result->t);
-				return false;
-		}
-		return true;
-	}
-
 	K kdb_send_command() {
 		auto command = _cli.command.value().data();
 		return k(_kdb_hnd, const_cast<char*>(command), (K)nullptr);
 	}
 
 	K kdb_send_trade_data() {
-		K row_data = Kdb::create_list(1, Kdb::create_symbol("hello3"));
-		return Kdb::execute_sync(_kdb_hnd, "insert", Kdb::create_symbol("trade"), row_data);
+		K row = Kdb::create_list(1, Kdb::create_symbol("hello3"));
+		return Kdb::execute_sync(_kdb_hnd, "insert", Kdb::create_symbol("trade"), row);
 	}
 
 	K kdb_send_quote() {
@@ -175,6 +110,7 @@ private:
              Kdb::create_float(_cli.price),                       //  ask                  | f
              Kdb::create_float(_cli.quantity)                     //  asize                | f
 		);
+//		Kdb::dump(stdout, row);
 		auto cmd = _cli.use_insert.presented() ? "insert" : ".u.upd";
 		return Kdb::execute_sync(_kdb_hnd, cmd, Kdb::create_symbol("quote"), row);
 	}
