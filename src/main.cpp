@@ -95,22 +95,37 @@ private:
 	}
 
 	K kdb_send_trade_data() {
-		K row = Kdb::create_list(1, Kdb::create_symbol("hello3"));
-		return Kdb::execute_sync(_kdb_hnd, "insert", Kdb::create_symbol("trade"), row);
+		const bool is_buy = _cli.side.value() == KdbSandboxCli::EnumSide::BUY;
+		K row = Kdb::create_list(12,
+            Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // time
+            Kdb::create_symbol(_cli.symbol.value().c_str()),         // sym
+            Kdb::create_symbol(_cli.exchange.value().c_str()),       // exch
+            Kdb::create_short(is_buy ? 1 : 0),                       // side
+            Kdb::create_float(_cli.price),                           // px
+            Kdb::create_float(_cli.quantity),                        // qty
+            Kdb::create_long(_cli.id),                               // tradeid
+            Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // exchts1
+            Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // exchts2
+            Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // locts1
+            Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // locts2
+            Kdb::create_timestamp_from_utc_usec(utc_usec_now())      // locts3
+		);
+		auto cmd = _cli.use_insert.presented() ? "insert" : ".u.upd";
+		return Kdb::execute_sync(_kdb_hnd, cmd, Kdb::create_symbol("mtrade"), row);
 	}
 
 	K kdb_send_quote() {
-		K row = Kdb::create_list(8,
-             Kdb::create_timespan_from_utc_usec(utc_usec_now()),  //  time                 | n
+		K row = Kdb::create_list(9,
+             Kdb::create_timestamp_from_utc_usec(utc_usec_now()), //  time                 | p
              Kdb::create_symbol(_cli.symbol.value().c_str()),     //  sym                  | s
              Kdb::create_timestamp_from_utc_usec(utc_usec_now()), //  tardisTime           | p
-             Kdb::create_long(_cli.id),                           //  orderBookSnapshotId  | j
+             Kdb::create_timestamp_from_utc_usec(utc_usec_now()), //  exchangeTime         | p
              Kdb::create_float(_cli.price),                       //  bid                  | f
              Kdb::create_float(_cli.quantity),                    //  bsize                | f
              Kdb::create_float(_cli.price),                       //  ask                  | f
-             Kdb::create_float(_cli.quantity)                     //  asize                | f
+             Kdb::create_float(_cli.quantity),                    //  asize                | f
+             Kdb::create_long(_cli.id)                            //  orderBookSnapshotId  | j
 		);
-//		Kdb::dump(stdout, row);
 		auto cmd = _cli.use_insert.presented() ? "insert" : ".u.upd";
 		return Kdb::execute_sync(_kdb_hnd, cmd, Kdb::create_symbol("quote"), row);
 	}

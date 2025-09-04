@@ -70,7 +70,7 @@ struct KdbSandboxCli {
 	KdbSandboxCli() {
 		action[EnumMethod::TEST].desc("Test connection.").mand(host, port).opt(user, password);
 		action[EnumMethod::SEND_CMD].desc("Send user command.").mand(host, port, command).opt(user, password);
-		action[EnumMethod::SEND_MTRADE].desc("Send market trade.").mand(host, port, exchange, price, quantity, side, id).opt(user, password, use_insert);
+		action[EnumMethod::SEND_MTRADE].desc("Send market trade.").mand(host, port, symbol, exchange, side, price, quantity, id).opt(user, password, use_insert);
 		action[EnumMethod::SEND_QUOTE].desc("Send quote.").mand(host, port, symbol, id, price, quantity).opt(user, password, use_insert);
 		action.finalize();
 	}

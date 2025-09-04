@@ -49,7 +49,6 @@ struct Kdb {
 			case KC: fprintf(out, "'%.*s'", (int)k->n, k->G0); break; // 10
 			case KS: for(int i = 0; i < k->n; i++) { printf("%s%s", kS(k)[i], i < k->n-1 ? ", " : ""); } break;
 
-//			case XT: fprintf(out, "(table): [table with %lld rows]", k->n); break;
 			case 0:
 			case XT:
 			case XD:
@@ -60,6 +59,14 @@ struct Kdb {
 				}
 			}
 			break;
+
+			case 100 :
+			case 101 :
+			case 102 :
+			case 103 :
+			case 104 :
+			case 105 :
+				break;
 
 			case -128: fprintf(out, "Error message='%s'", k->s); break;
 			default:
@@ -133,7 +140,7 @@ struct Kdb {
 			case XD: return "dict";
 
 			case 100 : return "lambda/function";
-			case 101 : return "unary_primitive";
+			case 101 : return "null";
 			case 102 : return "binary_primitive";
 			case 103 : return "ternary_primitive";
 			case 104 : return "projection";
