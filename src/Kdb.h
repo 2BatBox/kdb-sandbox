@@ -5,6 +5,8 @@
 
 struct Kdb {
 
+	static constexpr long long TIMESTAMP_NULL = 0x8000000000000000LL;
+
 	static void dump(FILE* out, const K& k) {
 		fprintf(out, "k0 %p", k);
 		fprintf(out, " memory_type=%d(%s)", k->m, memory_name(k->m));
@@ -58,7 +60,7 @@ struct Kdb {
 					dump(out, elements[i]);
 				}
 			}
-			break;
+				break;
 
 			case 100 :
 			case 101 :

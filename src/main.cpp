@@ -25,7 +25,7 @@ public:
 		switch (_cli.action.action().value) {
 			case KdbSandboxCli::TEST: break;
 			case KdbSandboxCli::SEND_CMD: result = kdb_send_command(); break;
-			case KdbSandboxCli::SEND_MTRADE: result = kdb_send_trade_data(); break;
+			case KdbSandboxCli::SEND_MTRADE: result = kdb_send_mtrade_data(); break;
 			case KdbSandboxCli::SEND_QUOTE: result = kdb_send_quote(); break;
 
 			default:
@@ -36,6 +36,7 @@ public:
 		if (result == nullptr) {
 			printf("No result was given!\n");
 		} else {
+			printf("Response :\n");
 			Kdb::dump(stdout, result);
 			r0(result);
 		}
@@ -94,23 +95,28 @@ private:
 		return k(_kdb_hnd, const_cast<char*>(command), (K)nullptr);
 	}
 
-	K kdb_send_trade_data() {
+	K kdb_send_mtrade_data() {
 		const bool is_buy = _cli.side.value() == KdbSandboxCli::EnumSide::BUY;
 		K row = Kdb::create_list(12,
-            Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // time
-            Kdb::create_symbol(_cli.symbol.value().c_str()),         // sym
-            Kdb::create_symbol(_cli.exchange.value().c_str()),       // exch
-            Kdb::create_short(is_buy ? 1 : 0),                       // side
-            Kdb::create_float(_cli.price),                           // px
-            Kdb::create_float(_cli.quantity),                        // qty
-            Kdb::create_long(_cli.id),                               // tradeid
-            Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // exchts1
-            Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // exchts2
-            Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // locts1
-            Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // locts2
-            Kdb::create_timestamp_from_utc_usec(utc_usec_now())      // locts3
+			Kdb::create_timestamp(Kdb::TIMESTAMP_NULL),              // time
+			Kdb::create_symbol(_cli.symbol.value().c_str()),         // sym
+			Kdb::create_symbol(_cli.exchange.value().c_str()),       // exch
+			Kdb::create_short(is_buy ? 1 : -1),                      // side
+			Kdb::create_float(_cli.price),                           // px
+			Kdb::create_float(_cli.quantity),                        // qty
+			Kdb::create_long(_cli.id),                               // tradeid
+			Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // exchts1
+			Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // exchts2
+			Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // locts1
+			Kdb::create_timestamp_from_utc_usec(utc_usec_now()),     // locts2
+			Kdb::create_timestamp_from_utc_usec(utc_usec_now())      // locts3
 		);
 		auto cmd = _cli.use_insert.presented() ? "insert" : ".u.upd";
+
+		printf("Request : cmd='%s'\n", cmd);
+		printf("Row dump : \n");
+		Kdb::dump(stdout, row);
+
 		return Kdb::execute_sync(_kdb_hnd, cmd, Kdb::create_symbol("mtrade"), row);
 	}
 
